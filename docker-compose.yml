@@ -1,0 +1,9 @@
+version: '3'
+services:
+  mongo:
+    image: "mongo:latest"
+    container_name: "snakedb"
+    ports:
+     - "27017:27017"
+    volumes:
+     - ./db:/data/db

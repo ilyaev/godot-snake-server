@@ -1,0 +1,7 @@
+Add NEw Record
+
+mutation {
+  newScore(name: "NAME", score: 10) {
+    id
+  }
+}
