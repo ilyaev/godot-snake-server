@@ -76,6 +76,7 @@ const resolvers = {
         handshake: (parent, args) => {
             const record = {
                 userid: args.userid,
+                name: args.name,
                 lastUpdated: dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT'),
                 lastUpdateStamp: Date.now()
             }
