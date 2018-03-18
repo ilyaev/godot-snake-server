@@ -8,7 +8,7 @@ type Query {
 
 type Mutation {
     newScore(userid: String, score: Int, name: String): Score
-    handshake(userid: String, name: String): User
+    handshake(userid: String, name: String, _id: String): User
 }
 
 type HsSnapshot {
@@ -18,6 +18,8 @@ type HsSnapshot {
 
 type User {
     userid: String
+    _id: String
+    maxScore: String
     name: String
 }
 

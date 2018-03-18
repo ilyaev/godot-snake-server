@@ -1,9 +1,17 @@
 var getCollection = require('./db').getCollection
 var dateFormat = require('dateformat')
+
 var fs = require('fs')
+var date = require('date-and-time')
+
 const { GraphQLServer } = require('graphql-yoga')
 
 const typeDefs = fs.readFileSync(__dirname + '/schema.gql', 'utf8')
+
+function toTimestamp(strDate) {
+    var datum = Date.parse(strDate)
+    return datum
+}
 
 const opts = {
     port: 4000 //configurable port no
@@ -11,6 +19,21 @@ const opts = {
 
 var scoreCollection = false
 var userCollection = false
+
+const getScores = (from = false, caption = 'Alltime', limit = 5) => {
+    return scoreCollection
+        .find(from ? { timestamp: { $gt: from } } : {})
+        .sort({ score: -1 })
+        .limit(limit)
+        .toArray()
+        .then(all => {
+            var res = {
+                caption: caption,
+                rows: all
+            }
+            return res
+        })
+}
 
 getCollection('highscore')
     .then(result => {
@@ -36,27 +59,11 @@ const resolvers = {
                 })
         },
         highscoreSnapshot: (parent, args) => {
-            return scoreCollection
-                .find()
-                .sort({ score: -1 })
-                .limit(3)
-                .toArray()
-                .then(all => {
-                    return [
-                        {
-                            caption: 'Alltime',
-                            rows: all
-                        },
-                        {
-                            caption: 'Today',
-                            rows: all
-                        },
-                        {
-                            caption: 'Last Week',
-                            rows: all
-                        }
-                    ]
-                })
+            return Promise.all([
+                getScores(),
+                getScores(toTimestamp(date.addDays(new Date(), -7).toDateString()), 'Last Week'),
+                getScores(toTimestamp(date.addDays(new Date(), -30).toDateString()), 'Last Month')
+            ]).then(values => values)
         }
     },
     Mutation: {
@@ -78,26 +85,41 @@ const resolvers = {
                 userid: args.userid,
                 name: args.name,
                 lastUpdated: dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT'),
-                lastUpdateStamp: Date.now()
+                lastUpdateStamp: Date.now(),
+                maxScore: 0
             }
 
-            userCollection
+            return userCollection
                 .find({ userid: args.userid })
                 .limit(1)
                 .toArray()
                 .then(records => {
                     if (records[0]) {
                         userCollection.update({ _id: records[0]._id }, { $set: record })
+                        record._id = records[0]._id
                     } else {
                         record.created = dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT')
                         record.createdStamp = Date.now()
-                        userCollection.insert(record)
+                        userCollection.insert(record).then(one => {
+                            record._id = one._id
+                        })
                     }
+                    return record
+                })
+                .then(record => {
+                    return scoreCollection
+                        .aggregate([{ $group: { _id: '$userid', maxScore: { $max: '$score' } } }])
+                        .toArray()
+                        .then(aggr => {
+                            if (aggr[0] && aggr[0].maxScore) {
+                                record.maxScore = aggr[0].maxScore
+                            }
+                            return record
+                        })
                 })
                 .catch(e => {
                     console.log('DB ERROR - ', e)
                 })
-            return record
         }
     }
 }

@@ -9,7 +9,7 @@
         "down": "docker-compose down"
     },
     "keywords": [],
-    "author": "Manjula Dube",
+    "author": "Yura Ilyaev",
     "license": "ISC",
     "devDependencies": {
         "babel-cli": "6.26.0",
@@ -20,6 +20,7 @@
         "nodemon": "1.17.1"
     },
     "dependencies": {
+        "date-and-time": "^0.6.2",
         "dateformat": "^3.0.3",
         "mongodb": "^3.0.4"
     }
