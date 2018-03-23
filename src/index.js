@@ -85,7 +85,7 @@ const resolvers = {
             return scoreCollection.count({ score: { $gt: score } }).then(count => {
                 return {
                     rank: count + 1,
-                    rankText: ordinal_suffix_of(count)
+                    rankText: ordinal_suffix_of(count + 1)
                 }
             })
         }
