@@ -4,11 +4,17 @@ type Query {
     hello(name: String): String
     highscore: [Score]
     highscoreSnapshot: [HsSnapshot]
+    rankByScore(score: Int): Rank
 }
 
 type Mutation {
     newScore(userid: String, score: Int, name: String): Score
     handshake(userid: String, name: String, _id: String): User
+}
+
+type Rank {
+    rank: Int
+    rankText: String
 }
 
 type HsSnapshot {

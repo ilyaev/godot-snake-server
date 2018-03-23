@@ -35,6 +35,21 @@ const getScores = (from = false, caption = 'Alltime', limit = 5) => {
         })
 }
 
+const ordinal_suffix_of = i => {
+    var j = i % 10,
+        k = i % 100
+    if (j == 1 && k != 11) {
+        return i + 'st'
+    }
+    if (j == 2 && k != 12) {
+        return i + 'nd'
+    }
+    if (j == 3 && k != 13) {
+        return i + 'rd'
+    }
+    return i + 'th'
+}
+
 getCollection('highscore')
     .then(result => {
         scoreCollection = result
@@ -64,6 +79,15 @@ const resolvers = {
                 getScores(toTimestamp(date.addDays(new Date(), -7).toDateString()), 'Last Week'),
                 getScores(toTimestamp(date.addDays(new Date(), -30).toDateString()), 'Last Month')
             ]).then(values => values)
+        },
+        rankByScore: (parent, args) => {
+            const score = args.score
+            return scoreCollection.count({ score: { $gt: score } }).then(count => {
+                return {
+                    rank: count + 1,
+                    rankText: ordinal_suffix_of(count)
+                }
+            })
         }
     },
     Mutation: {
