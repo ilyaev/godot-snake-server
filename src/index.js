@@ -109,8 +109,7 @@ const resolvers = {
                 userid: args.userid,
                 name: args.name,
                 lastUpdated: dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT'),
-                lastUpdateStamp: Date.now(),
-                maxScore: 0
+                lastUpdateStamp: Date.now()
             }
 
             return userCollection
@@ -119,24 +118,29 @@ const resolvers = {
                 .toArray()
                 .then(records => {
                     if (records[0]) {
+                        record.impressions = record.impressions + 1
                         userCollection.update({ _id: records[0]._id }, { $set: record })
                         record._id = records[0]._id
                     } else {
                         record.created = dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT')
                         record.createdStamp = Date.now()
+                        record.impressions = 0
+                        record.maxScore = 0
                         userCollection.insert(record).then(one => {
-                            record._id = one._id
+                            record._id = one.ops[0]._id
                         })
                     }
                     return record
                 })
                 .then(record => {
                     return scoreCollection
-                        .aggregate([{ $group: { _id: '$userid', maxScore: { $max: '$score' } } }])
+                        .aggregate([{ $match: { userid: record._id } }, { $group: { _id: '$userid', maxScore: { $max: '$score' } } }])
                         .toArray()
                         .then(aggr => {
                             if (aggr[0] && aggr[0].maxScore) {
                                 record.maxScore = aggr[0].maxScore
+                            } else {
+                                record.maxScore = 0
                             }
                             return record
                         })
