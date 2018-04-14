@@ -118,7 +118,7 @@ const resolvers = {
                 .toArray()
                 .then(records => {
                     if (records[0]) {
-                        record.impressions = record.impressions + 1
+                        record.impressions = record.impressions > 0 ? record.impression + 1 : 0
                         userCollection.update({ _id: records[0]._id }, { $set: record })
                         record._id = records[0]._id
                     } else {
@@ -133,8 +133,17 @@ const resolvers = {
                     return record
                 })
                 .then(record => {
+                    console.log('AGGT!', record)
+                    console.log(
+                        'Q: ',
+                        { $match: { userid: String(record._id) } },
+                        { $group: { _id: '$userid', maxScore: { $max: '$score' } } }
+                    )
                     return scoreCollection
-                        .aggregate([{ $match: { userid: record._id } }, { $group: { _id: '$userid', maxScore: { $max: '$score' } } }])
+                        .aggregate([
+                            { $match: { userid: String(record._id) } },
+                            { $group: { _id: '$userid', maxScore: { $max: '$score' } } }
+                        ])
                         .toArray()
                         .then(aggr => {
                             if (aggr[0] && aggr[0].maxScore) {
