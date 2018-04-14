@@ -122,7 +122,9 @@ const resolvers = {
                         record.impressions = records[0].impressions > 0 ? records[0].impressions + 1 : 1
                         userCollection.update({ _id: records[0]._id }, { $set: record })
                         record._id = records[0]._id
+                        console.log('-visit: ', record.impressions)
                     } else {
+                        console.llg('-new')
                         record.created = dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT')
                         record.createdStamp = Date.now()
                         record.impressions = 0
