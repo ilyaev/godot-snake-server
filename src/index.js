@@ -124,7 +124,7 @@ const resolvers = {
                         record._id = records[0]._id
                         console.log('-visit: ', record.impressions)
                     } else {
-                        console.llg('-new')
+                        console.log('-new')
                         record.created = dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT')
                         record.createdStamp = Date.now()
                         record.impressions = 0
