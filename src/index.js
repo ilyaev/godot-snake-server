@@ -99,6 +99,7 @@ const resolvers = {
                 userid: args.userid,
                 score: args.score
             }
+            console.log('New Score: ', args.name, ', ', args.score)
             // collection.insert(record)
             scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
             // collection.update({ name: args.name, score: args.score }, { $set: record }, { upsert: true })
@@ -111,14 +112,14 @@ const resolvers = {
                 lastUpdated: dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT'),
                 lastUpdateStamp: Date.now()
             }
-
+            console.log('Handshake: ', args.name, ', ', args.userid)
             return userCollection
                 .find({ userid: args.userid })
                 .limit(1)
                 .toArray()
                 .then(records => {
                     if (records[0]) {
-                        record.impressions = record.impressions > 0 ? record.impression + 1 : 0
+                        record.impressions = records[0].impressions > 0 ? records[0].impressions + 1 : 1
                         userCollection.update({ _id: records[0]._id }, { $set: record })
                         record._id = records[0]._id
                     } else {
@@ -133,12 +134,6 @@ const resolvers = {
                     return record
                 })
                 .then(record => {
-                    console.log('AGGT!', record)
-                    console.log(
-                        'Q: ',
-                        { $match: { userid: String(record._id) } },
-                        { $group: { _id: '$userid', maxScore: { $max: '$score' } } }
-                    )
                     return scoreCollection
                         .aggregate([
                             { $match: { userid: String(record._id) } },
