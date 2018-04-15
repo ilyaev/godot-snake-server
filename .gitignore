@@ -6,3 +6,4 @@ db
 mongo-dump
 backup
 .env
+yarn-error.log

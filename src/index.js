@@ -20,6 +20,10 @@ const opts = {
 var scoreCollection = false
 var userCollection = false
 
+const getIp = req => {
+    return req.headers['X-Forwarded-For'] || req.headers['x-forwarded-for'] || req.client.remoteAddress
+}
+
 const getScores = (from = false, caption = 'Alltime', limit = 5) => {
     return scoreCollection
         .find(from ? { timestamp: { $gt: from } } : {})
@@ -82,6 +86,7 @@ const resolvers = {
         },
         rankByScore: (parent, args) => {
             const score = args.score
+            console.log('Rank so far: ', args.score)
             return scoreCollection.count({ score: { $gt: score } }).then(count => {
                 return {
                     rank: count + 1,
@@ -100,19 +105,18 @@ const resolvers = {
                 score: args.score
             }
             console.log('New Score: ', args.name, ', ', args.score)
-            // collection.insert(record)
             scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
-            // collection.update({ name: args.name, score: args.score }, { $set: record }, { upsert: true })
             return record
         },
-        handshake: (parent, args) => {
+        handshake: (parent, args, context, info, test) => {
             const record = {
                 userid: args.userid,
                 name: args.name,
                 lastUpdated: dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT'),
-                lastUpdateStamp: Date.now()
+                lastUpdateStamp: Date.now(),
+                ip: server.currentIP
             }
-            console.log('Handshake: ', args.name, ', ', args.userid)
+            var msg = 'Handshake: ' + args.name + ', ' + args.userid
             return userCollection
                 .find({ userid: args.userid })
                 .limit(1)
@@ -122,9 +126,9 @@ const resolvers = {
                         record.impressions = records[0].impressions > 0 ? records[0].impressions + 1 : 1
                         userCollection.update({ _id: records[0]._id }, { $set: record })
                         record._id = records[0]._id
-                        console.log('-visit: ', record.impressions)
+                        msg += ', visit: ' + record.impressions
                     } else {
-                        console.log('-new')
+                        msg += ', new'
                         record.created = dateFormat(new Date(), 'dddd, mmmm dS, yyyy, h:MM:ss TT')
                         record.createdStamp = Date.now()
                         record.impressions = 0
@@ -133,6 +137,7 @@ const resolvers = {
                             record._id = one.ops[0]._id
                         })
                     }
+                    console.log(msg)
                     return record
                 })
                 .then(record => {
@@ -158,5 +163,11 @@ const resolvers = {
     }
 }
 
-const server = new GraphQLServer({ typeDefs, resolvers, opts })
+const server = new GraphQLServer({ typeDefs, resolvers, opts, context: { a: 5 } })
+
+server.express.all('*', (req, res, next) => {
+    server.currentIP = getIp(req)
+    next()
+})
+
 server.start(() => console.log(`Server is running at http://localhost:${opts.port}`))
