@@ -116,7 +116,7 @@ const resolvers = {
                 lastUpdateStamp: Date.now(),
                 ip: server.currentIP
             }
-            var msg = 'Handshake: ' + args.name + ', ' + args.userid
+            var msg = 'Handshake: ' + args.name + ', ' + ', ' + server.currentIP + ', ' + args.userid
             return userCollection
                 .find({ userid: args.userid })
                 .limit(1)
