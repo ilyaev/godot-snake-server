@@ -24,6 +24,11 @@ const getIp = req => {
     return req.headers['X-Forwarded-For'] || req.headers['x-forwarded-for'] || req.client.remoteAddress
 }
 
+const dolog = msg => {
+    const date = dateFormat(new Date(), 'mm/dd hh:MM tt')
+    console.log(date + ': ' + msg)
+}
+
 const getScores = (from = false, caption = 'Alltime', limit = 5) => {
     return scoreCollection
         .find(from ? { timestamp: { $gt: from } } : {})
@@ -86,7 +91,7 @@ const resolvers = {
         },
         rankByScore: (parent, args) => {
             const score = args.score
-            console.log('Rank so far: ', args.score)
+            dolog('Rank so far: ', args.score)
             return scoreCollection.count({ score: { $gt: score } }).then(count => {
                 return {
                     rank: count + 1,
@@ -104,7 +109,7 @@ const resolvers = {
                 userid: args.userid,
                 score: args.score
             }
-            console.log('New Score: ', args.name, ', ', args.score)
+            dolog('New Score: ', args.name, ', ', args.score)
             scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
             return record
         },
@@ -137,7 +142,7 @@ const resolvers = {
                             record._id = one.ops[0]._id
                         })
                     }
-                    console.log(msg)
+                    dolog(msg)
                     return record
                 })
                 .then(record => {
