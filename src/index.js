@@ -91,7 +91,7 @@ const resolvers = {
         },
         rankByScore: (parent, args) => {
             const score = args.score
-            dolog('Rank so far: ', args.score)
+            dolog('Rank so far: ' + args.score)
             return scoreCollection.count({ score: { $gt: score } }).then(count => {
                 return {
                     rank: count + 1,
@@ -109,7 +109,7 @@ const resolvers = {
                 userid: args.userid,
                 score: args.score
             }
-            dolog('New Score: ', args.name, ', ', args.score)
+            dolog('New Score: ' + args.name + ', ' + args.score)
             scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
             return record
         },
