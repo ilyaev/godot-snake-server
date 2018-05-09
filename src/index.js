@@ -110,7 +110,11 @@ const resolvers = {
                 score: args.score
             }
             dolog('New Score: ' + args.name + ', ' + args.score)
-            scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
+            if (args.name === 'Western') {
+                console.log('--ignore')
+            } else {
+                scoreCollection.findAndModify({ name: args.name, score: args.score }, [['_id', 'asc']], { $set: record }, { upsert: true })
+            }
             return record
         },
         handshake: (parent, args, context, info, test) => {
